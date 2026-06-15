@@ -1,6 +1,59 @@
 # JoinObject
 
-`JoinObject` is a PowerShell module providing the **`Join-Object`** function (alias **`Join`**) — a pipeline join for PowerShell. It takes objects from the pipeline, determines a common identity property (e.g. UPN or GUID), calls a second cmdlet with it, and merges the properties of both results into a single object.
+PowerShell's pipeline lets you write remarkably elegant one-liners. As long as you stay within a single cmdlet's output, life is good:
+
+```powershell
+Get-Mailbox -RecipientTypeDetails SharedMailbox |
+    Get-MailboxStatistics |
+    Select-Object DisplayName, TotalItemSize
+```
+
+But the moment you need values from **two different cmdlets** in the same result, that elegance falls apart. `Get-MailboxStatistics` returns its *own* objects — the `Department`, `Office` or `PrimarySmtpAddress` you had on the `Get-Mailbox` object are gone. You're left with two awkward workarounds:
+
+**1. Buffer everything in a loop:**
+
+```powershell
+$report = foreach ($mbx in Get-Mailbox -RecipientTypeDetails SharedMailbox) {
+    $stats = Get-MailboxStatistics -Identity $mbx.PrimarySmtpAddress
+    [pscustomobject]@{
+        DisplayName   = $mbx.DisplayName
+        Department    = $mbx.Department
+        TotalItemSize = $stats.TotalItemSize
+        ItemCount     = $stats.ItemCount
+    }
+}
+```
+
+**2. Or reach back out with computed properties:**
+
+```powershell
+Get-Mailbox -RecipientTypeDetails SharedMailbox |
+    Select-Object DisplayName, Department,
+        @{ Name = 'TotalItemSize'; Expression = { (Get-MailboxStatistics -Identity $_.PrimarySmtpAddress).TotalItemSize } },
+        @{ Name = 'ItemCount';     Expression = { (Get-MailboxStatistics -Identity $_.PrimarySmtpAddress).ItemCount } }
+```
+
+Both work, but both hurt: the loop throws the pipeline away, and the computed properties call `Get-MailboxStatistics` *once per column* — the same expensive lookup, over and over.
+
+## Enter Join-Object
+
+`Join-Object` (alias **`Join`**) brings the join back into the pipeline. For each object it finds a shared identity (like `PrimarySmtpAddress` or a GUID), calls the second cmdlet **once**, and merges both results into a single object — so you just keep piping:
+
+```powershell
+# Everything above, in one readable line:
+Get-Mailbox -RecipientTypeDetails SharedMailbox |
+    Join-Object Get-MailboxStatistics |
+    Select-Object DisplayName, Department, TotalItemSize, ItemCount
+```
+
+```powershell
+# It works for any pair of cmdlets that share an identity — e.g. services and their processes:
+Get-Service |
+    Join Get-Process -IdentityProperty Name |
+    Select-Object Name, Status, CPU, WorkingSet
+```
+
+No buffering, no repeated lookups, no computed-property gymnastics — just one pipe.
 
 ## Installation
 
@@ -11,20 +64,15 @@ git clone <repository-url> JoinObject
 Import-Module ./JoinObject/JoinObject.psd1
 ```
 
-## Usage
+## More examples
 
 ```powershell
-# Attach mailbox statistics to mailbox objects
-Get-Mailbox | Join-Object Get-MailboxStatistics
-
-# Short form using the 'Join' alias and an explicit identity property
-Get-Service | Join Get-Process -IdentityProperty Name
-
-# Join AD users with their mailboxes, suppressing errors
+# Pass extra parameters to the target cmdlet via -Options, e.g. to suppress errors
 Get-ADUser -Filter "Name -like 'John*'" |
     Join-Object Get-Mailbox -Options @{ ErrorAction = 'SilentlyContinue' }
 
-# Merge AD attributes and overwrite existing fields
+# -With is an alias for -Options; -Force overwrites existing fields instead of
+# suffixing collisions with _Second
 $Data | Join-Object Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
 ```
 
