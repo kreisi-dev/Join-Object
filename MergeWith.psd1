@@ -15,13 +15,13 @@
     Copyright         = '(c) Rene Kreisbeck. Alle Rechte vorbehalten.'
 
     # Beschreibung der Funktionalität dieses Moduls.
-    Description       = 'Stellt Merge-With bereit – ein "Left Join" für die PowerShell-Pipeline, der Objekte dynamisch mit den Ergebnissen eines weiteren Cmdlets anreichert.'
+    Description       = 'Stellt Join-Object bereit – ein "Left Join" für die PowerShell-Pipeline, der Objekte dynamisch mit den Ergebnissen eines weiteren Cmdlets anreichert. Verfügbar auch über den Alias "Join".'
 
     # Mindestversion der PowerShell-Engine.
     PowerShellVersion = '5.1'
 
     # Vom Modul exportierte Funktionen.
-    FunctionsToExport = @('Merge-With')
+    FunctionsToExport = @('Join-Object')
 
     # Vom Modul exportierte Cmdlets.
     CmdletsToExport   = @()
@@ -30,7 +30,7 @@
     VariablesToExport = @()
 
     # Vom Modul exportierte Aliase.
-    AliasesToExport   = @()
+    AliasesToExport   = @('Join')
 
     # Private Daten, u.a. für die PowerShell Gallery.
     PrivateData = @{
@@ -38,7 +38,7 @@
             Tags         = @('Merge', 'Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
-            ReleaseNotes = 'Erste Veröffentlichung von Merge-With.'
+            ReleaseNotes = 'Erste Veröffentlichung von Join-Object (Alias: Join).'
         }
     }
 }

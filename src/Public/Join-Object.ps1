@@ -1,4 +1,4 @@
-function Merge-With {
+function Join-Object {
     <#
     .SYNOPSIS
         Dynamically merges objects from the pipeline with data from another cmdlet.
@@ -7,6 +7,8 @@ function Merge-With {
         Acts like a "Left Join" in SQL. It takes an input object, identifies a common
         identity property (like UPN or GUID), calls a second cmdlet with that identity,
         and merges the properties of both results into a single object.
+
+        Also available via the alias 'Join'.
 
     .PARAMETER Cmdlet
         The name of the cmdlet to call for the enrichment (e.g., 'Get-ADUser', 'Get-Mailbox Statistics').
@@ -25,22 +27,23 @@ function Merge-With {
         If set, properties from the second cmdlet will overwrite existing properties of the InputObject.
 
     .EXAMPLE
-        Get-Mailbox | Merge-With Get-MailboxStatistics
+        Get-Mailbox | Join-Object Get-MailboxStatistics
         Simple merge: Adds mailbox statistics to your mailbox objects.
 
     .EXAMPLE
-        Get-Service | Merge-With Get-Process -IdentityProperty Name
-        Joins services with their corresponding processes by name.
+        Get-Service | Join Get-Process -IdentityProperty Name
+        Joins services with their corresponding processes by name (using the 'Join' alias).
 
     .EXAMPLE
-        Get-ADUser -Filter "Name -like 'John*'" | Merge-With Get-Mailbox -Options @{ErrorAction = 'SilentlyContinue'}
+        Get-ADUser -Filter "Name -like 'John*'" | Join-Object Get-Mailbox -Options @{ErrorAction = 'SilentlyContinue'}
         Joins AD users with their Exchange mailboxes, suppressing errors if a user has no mailbox.
 
     .EXAMPLE
-        $Data | Merge-With Get-ADUser -With @{Properties = "Department", "Office"} -Force
+        $Data | Join-Object Get-ADUser -With @{Properties = "Department", "Office"} -Force
         Merges AD attributes and overwrites any existing 'Department' or 'Office' fields in the source data.
     #>
     [CmdletBinding()]
+    [Alias('Join')]
     param(
         [Parameter(Mandatory, Position=0)]
         [string] $Cmdlet,

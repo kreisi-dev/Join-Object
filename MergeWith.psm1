@@ -11,4 +11,4 @@ foreach ($file in $Public) {
     }
 }
 
-Export-ModuleMember -Function $Public.BaseName
+Export-ModuleMember -Function $Public.BaseName -Alias '*'

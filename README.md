@@ -1,6 +1,6 @@
 # MergeWith
 
-`MergeWith` ist ein PowerShell-Modul mit der Funktion **`Merge-With`** – einem „Left Join" für die PowerShell-Pipeline. Es nimmt Objekte aus der Pipeline, ermittelt eine gemeinsame Identitätseigenschaft (z. B. UPN oder GUID), ruft damit ein zweites Cmdlet auf und führt die Eigenschaften beider Ergebnisse zu einem Objekt zusammen.
+`MergeWith` ist ein PowerShell-Modul mit der Funktion **`Join-Object`** (Alias **`Join`**) – einem „Left Join" für die PowerShell-Pipeline. Es nimmt Objekte aus der Pipeline, ermittelt eine gemeinsame Identitätseigenschaft (z. B. UPN oder GUID), ruft damit ein zweites Cmdlet auf und führt die Eigenschaften beider Ergebnisse zu einem Objekt zusammen.
 
 ## Installation
 
@@ -15,23 +15,23 @@ Import-Module ./MergeWith/MergeWith.psd1
 
 ```powershell
 # Postfachstatistiken an Postfach-Objekte anhängen
-Get-Mailbox | Merge-With Get-MailboxStatistics
+Get-Mailbox | Join-Object Get-MailboxStatistics
 
-# Join über eine explizite Identitätseigenschaft
-Get-Service | Merge-With Get-Process -IdentityProperty Name
+# Kurzform über den Alias 'Join' und eine explizite Identitätseigenschaft
+Get-Service | Join Get-Process -IdentityProperty Name
 
 # AD-Benutzer mit Postfächern verbinden, Fehler unterdrücken
 Get-ADUser -Filter "Name -like 'John*'" |
-    Merge-With Get-Mailbox -Options @{ ErrorAction = 'SilentlyContinue' }
+    Join-Object Get-Mailbox -Options @{ ErrorAction = 'SilentlyContinue' }
 
 # AD-Attribute mergen und bestehende Felder überschreiben
-$Data | Merge-With Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
+$Data | Join-Object Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
 ```
 
 Die vollständige Hilfe ist nach dem Import verfügbar:
 
 ```powershell
-Get-Help Merge-With -Full
+Get-Help Join-Object -Full
 ```
 
 ## Parameter (Kurzüberblick)
@@ -52,7 +52,7 @@ MergeWith/
 ├── MergeWith.psm1            # Lader für die öffentlichen Funktionen
 └── src/
     └── Public/
-        └── Merge-With.ps1    # Implementierung von Merge-With
+        └── Join-Object.ps1   # Implementierung von Join-Object (Alias: Join)
 ```
 
 ## Anforderungen
