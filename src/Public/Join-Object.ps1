@@ -4,9 +4,10 @@ function Join-Object {
         Dynamically merges objects from the pipeline with data from another cmdlet.
 
     .DESCRIPTION
-        Acts like a "Left Join" in SQL. It takes an input object, identifies a common
-        identity property (like UPN or GUID), calls a second cmdlet with that identity,
-        and merges the properties of both results into a single object.
+        Joins objects from the pipeline with data from another cmdlet. It takes an input
+        object, identifies a common identity property (like UPN or GUID), calls a second
+        cmdlet with that identity, and merges the properties of both results into a single
+        object.
 
         Also available via the alias 'Join'.
 

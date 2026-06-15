@@ -1,17 +1,21 @@
 # Changelog
 
-Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+All notable changes to this project are documented in this file.
 
-Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
-und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Geändert
-- Funktion `Merge-With` in das verb-konforme `Join-Object` umbenannt (Alias `Join`).
+### Added
+- Pester tests under `tests/`.
+
+### Changed
+- Renamed the `Merge-With` function to the verb-approved `Join-Object` (alias `Join`).
+- Switched all repository documentation to English.
 
 ## [0.1.0] - 2026-06-15
 
-### Hinzugefügt
-- Erste Version der Funktion (Left Join für die PowerShell-Pipeline).
-- Modul-Manifest `MergeWith.psd1` und Lader `MergeWith.psm1`.
+### Added
+- Initial version of the function (a pipeline join for PowerShell).
+- Module manifest `MergeWith.psd1` and loader `MergeWith.psm1`.

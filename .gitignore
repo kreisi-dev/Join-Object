@@ -1,11 +1,11 @@
-# PowerShell / Build-Artefakte
+# PowerShell / build artifacts
 *.zip
 *.nupkg
 output/
 build/
 dist/
 
-# Test-Ergebnisse (Pester)
+# Test results (Pester)
 testResults*.xml
 coverage*.xml
 
@@ -15,6 +15,6 @@ coverage*.xml
 *.swp
 *~
 
-# Betriebssystem
+# Operating system
 .DS_Store
 Thumbs.db

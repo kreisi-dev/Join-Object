@@ -1,44 +1,44 @@
 @{
-    # Skript-Modul, das mit diesem Manifest verknüpft ist.
+    # Script module associated with this manifest.
     RootModule        = 'MergeWith.psm1'
 
-    # Version des Moduls.
+    # Version of this module.
     ModuleVersion     = '0.1.0'
 
-    # Eindeutige ID für dieses Modul.
+    # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
 
-    # Autor des Moduls.
+    # Author of this module.
     Author            = 'Rene Kreisbeck'
 
-    # Copyright-Hinweis.
-    Copyright         = '(c) Rene Kreisbeck. Alle Rechte vorbehalten.'
+    # Copyright statement.
+    Copyright         = '(c) Rene Kreisbeck. All rights reserved.'
 
-    # Beschreibung der Funktionalität dieses Moduls.
-    Description       = 'Stellt Join-Object bereit – ein "Left Join" für die PowerShell-Pipeline, der Objekte dynamisch mit den Ergebnissen eines weiteren Cmdlets anreichert. Verfügbar auch über den Alias "Join".'
+    # Description of the functionality provided by this module.
+    Description       = 'Provides Join-Object - a pipeline join for PowerShell that dynamically enriches objects with the results of another cmdlet. Also available via the alias "Join".'
 
-    # Mindestversion der PowerShell-Engine.
+    # Minimum version of the PowerShell engine required.
     PowerShellVersion = '5.1'
 
-    # Vom Modul exportierte Funktionen.
+    # Functions exported from this module.
     FunctionsToExport = @('Join-Object')
 
-    # Vom Modul exportierte Cmdlets.
+    # Cmdlets exported from this module.
     CmdletsToExport   = @()
 
-    # Vom Modul exportierte Variablen.
+    # Variables exported from this module.
     VariablesToExport = @()
 
-    # Vom Modul exportierte Aliase.
+    # Aliases exported from this module.
     AliasesToExport   = @('Join')
 
-    # Private Daten, u.a. für die PowerShell Gallery.
+    # Private data, e.g. for the PowerShell Gallery.
     PrivateData = @{
         PSData = @{
             Tags         = @('Merge', 'Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
-            ReleaseNotes = 'Erste Veröffentlichung von Join-Object (Alias: Join).'
+            ReleaseNotes = 'Initial release of Join-Object (alias: Join).'
         }
     }
 }

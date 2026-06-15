@@ -1,64 +1,75 @@
 # MergeWith
 
-`MergeWith` ist ein PowerShell-Modul mit der Funktion **`Join-Object`** (Alias **`Join`**) – einem „Left Join" für die PowerShell-Pipeline. Es nimmt Objekte aus der Pipeline, ermittelt eine gemeinsame Identitätseigenschaft (z. B. UPN oder GUID), ruft damit ein zweites Cmdlet auf und führt die Eigenschaften beider Ergebnisse zu einem Objekt zusammen.
+`MergeWith` is a PowerShell module providing the **`Join-Object`** function (alias **`Join`**) — a pipeline join for PowerShell. It takes objects from the pipeline, determines a common identity property (e.g. UPN or GUID), calls a second cmdlet with it, and merges the properties of both results into a single object.
 
 ## Installation
 
-Repository klonen und das Modul importieren:
+Clone the repository and import the module:
 
 ```powershell
 git clone <repository-url> MergeWith
 Import-Module ./MergeWith/MergeWith.psd1
 ```
 
-## Verwendung
+## Usage
 
 ```powershell
-# Postfachstatistiken an Postfach-Objekte anhängen
+# Attach mailbox statistics to mailbox objects
 Get-Mailbox | Join-Object Get-MailboxStatistics
 
-# Kurzform über den Alias 'Join' und eine explizite Identitätseigenschaft
+# Short form using the 'Join' alias and an explicit identity property
 Get-Service | Join Get-Process -IdentityProperty Name
 
-# AD-Benutzer mit Postfächern verbinden, Fehler unterdrücken
+# Join AD users with their mailboxes, suppressing errors
 Get-ADUser -Filter "Name -like 'John*'" |
     Join-Object Get-Mailbox -Options @{ ErrorAction = 'SilentlyContinue' }
 
-# AD-Attribute mergen und bestehende Felder überschreiben
+# Merge AD attributes and overwrite existing fields
 $Data | Join-Object Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
 ```
 
-Die vollständige Hilfe ist nach dem Import verfügbar:
+Full help is available after import:
 
 ```powershell
 Get-Help Join-Object -Full
 ```
 
-## Parameter (Kurzüberblick)
+## Parameters (overview)
 
-| Parameter          | Beschreibung                                                                 |
-| ------------------ | --------------------------------------------------------------------------- |
-| `Cmdlet`           | Name des Cmdlets, das zur Anreicherung aufgerufen wird.                      |
-| `InputObject`      | Das Objekt aus der Pipeline.                                                 |
-| `IdentityProperty` | Optional: explizite Identitätseigenschaft des Eingabeobjekts.               |
-| `Options`          | Hashtable mit zusätzlichen Parametern für das Ziel-Cmdlet (Aliase: `With`). |
-| `Force`            | Überschreibt bestehende Eigenschaften statt sie mit `_Second` zu suffixen.  |
+| Parameter          | Description                                                                  |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `Cmdlet`           | Name of the cmdlet called to enrich the data.                                |
+| `InputObject`      | The object coming from the pipeline.                                         |
+| `IdentityProperty` | Optional: explicit identity property of the input object.                    |
+| `Options`          | Hashtable of additional parameters for the target cmdlet (alias: `With`).    |
+| `Force`            | Overwrites existing properties instead of suffixing them with `_Second`.     |
 
-## Projektstruktur
+## Project structure
 
 ```
 MergeWith/
-├── MergeWith.psd1            # Modul-Manifest
-├── MergeWith.psm1            # Lader für die öffentlichen Funktionen
-└── src/
-    └── Public/
-        └── Join-Object.ps1   # Implementierung von Join-Object (Alias: Join)
+├── MergeWith.psd1            # Module manifest
+├── MergeWith.psm1            # Loader for the public functions
+├── src/
+│   └── Public/
+│       └── Join-Object.ps1   # Implementation of Join-Object (alias: Join)
+└── tests/
+    └── Join-Object.Tests.ps1 # Pester tests
 ```
 
-## Anforderungen
+## Testing
 
-- PowerShell 5.1 oder höher
+Tests are written with [Pester](https://pester.dev) (5.x):
 
-## Lizenz
+```powershell
+Invoke-Pester -Path ./tests
+```
 
-Veröffentlicht unter der MIT-Lizenz – siehe [LICENSE](LICENSE).
+## Requirements
+
+- PowerShell 5.1 or later
+- Pester 5.x (for running the tests)
+
+## License
+
+Released under the MIT License — see [LICENSE](LICENSE).

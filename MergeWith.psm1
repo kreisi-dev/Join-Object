@@ -1,5 +1,5 @@
 # MergeWith.psm1
-# Lädt alle öffentlichen Funktionen aus src/Public und exportiert sie.
+# Loads all public functions from src/Public and exports them.
 
 $Public = @(Get-ChildItem -Path "$PSScriptRoot/src/Public/*.ps1" -ErrorAction SilentlyContinue)
 
@@ -7,7 +7,7 @@ foreach ($file in $Public) {
     try {
         . $file.FullName
     } catch {
-        Write-Error "Fehler beim Laden der Funktion $($file.FullName): $($_.Exception.Message)"
+        Write-Error "Failed to load function $($file.FullName): $($_.Exception.Message)"
     }
 }
 
