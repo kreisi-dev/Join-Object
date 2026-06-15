@@ -61,20 +61,23 @@ function Join-Object {
     )
 
     begin {
-        try {
-            $cmdInfo = Get-Command $Cmdlet -ErrorAction Stop
-            $targetParams = $cmdInfo.Parameters.Keys
+        # Resolve the target cmdlet. A missing cmdlet surfaces as a clean terminating error.
+        $cmdInfo = Get-Command $Cmdlet -ErrorAction Stop
+        $targetParams = @($cmdInfo.Parameters.Keys)
 
-            # Map of common identity parameter names used in various Microsoft modules
-            $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
-            $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
+        # Common identity parameter names used across many modules
+        $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
+        $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
 
-            if (-not $idParam) {
-                throw "No suitable Identity parameter found in cmdlet '$Cmdlet'."
-            }
-        } catch {
-            Write-Error "Merge-With Initialization Error: $($_.Exception.Message)"
-            return
+        if (-not $idParam) {
+            # Terminate up front so process{} never runs with an undefined identity parameter.
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                [System.ArgumentException]::new("Could not determine an identity parameter for cmdlet '$Cmdlet'. Expected one of: $($preferredIdParams -join ', ')."),
+                'IdentityParameterNotFound',
+                [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                $Cmdlet
+            )
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
         }
     }
 
@@ -93,7 +96,11 @@ function Join-Object {
         }
 
         if (-not $srcProp) {
-            Write-Warning "No identity value found in source object. Skipping..."
+            if ($IdentityProperty) {
+                Write-Warning "Input object has no '$IdentityProperty' property. Passing it through unchanged."
+            } else {
+                Write-Warning "No identity property found on the input object. Passing it through unchanged."
+            }
             return $InputObject
         }
 
@@ -116,10 +123,15 @@ function Join-Object {
             $null
         }
 
-        # If no match is found, pass through the original object
-        if (-not $obj2) { return $InputObject }
+        # If the target returns multiple objects, enrich from the first match.
+        if ($obj2 -is [System.Collections.IEnumerable] -and $obj2 -isnot [string]) {
+            $obj2 = $obj2 | Select-Object -First 1
+        }
 
-        # 4. Merge data using an ordered hashtable for performance
+        # If no match is found, pass through the original object
+        if ($null -eq $obj2) { return $InputObject }
+
+        # 4. Merge data using an ordered dictionary for performance
         $mergedResult = [ordered]@{}
 
         # Load properties from source object
@@ -129,7 +141,8 @@ function Join-Object {
 
         # Add or overwrite properties from the second object
         foreach ($p in $obj2.PSObject.Properties) {
-            if ($null -ne $mergedResult[$p.Name]) {
+            # Use key existence (not value) so source properties with a $null value still collide.
+            if ($mergedResult.Contains($p.Name)) {
                 if ($Force) {
                     $mergedResult[$p.Name] = $p.Value
                 } else {

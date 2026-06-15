@@ -1,4 +1,4 @@
-# MergeWith.psm1
+# JoinObject.psm1
 # Loads all public functions from src/Public and exports them.
 
 $Public = @(Get-ChildItem -Path "$PSScriptRoot/src/Public/*.ps1" -ErrorAction SilentlyContinue)

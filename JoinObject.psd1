@@ -1,6 +1,6 @@
 @{
     # Script module associated with this manifest.
-    RootModule        = 'MergeWith.psm1'
+    RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
     ModuleVersion     = '0.1.0'
@@ -35,7 +35,7 @@
     # Private data, e.g. for the PowerShell Gallery.
     PrivateData = @{
         PSData = @{
-            Tags         = @('Merge', 'Join', 'Pipeline', 'Objects', 'Utility')
+            Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
             ReleaseNotes = 'Initial release of Join-Object (alias: Join).'

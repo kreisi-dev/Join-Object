@@ -1,7 +1,7 @@
 #Requires -Modules Pester
 
 BeforeAll {
-    $modulePath = Join-Path $PSScriptRoot '..' 'MergeWith.psd1'
+    $modulePath = Join-Path $PSScriptRoot '..' 'JoinObject.psd1'
     Import-Module $modulePath -Force
 
     # A target cmdlet used for enrichment. 'Name' is a recognized identity parameter.
@@ -12,16 +12,26 @@ BeforeAll {
         )
         [pscustomobject]@{ Status = 'New'; Extra = "extra-$Name" }
     }
+
+    # A target cmdlet without any recognized identity parameter.
+    function global:Get-TestNoIdentity {
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)] $Color
+        )
+        [pscustomobject]@{ Shade = 'dark' }
+    }
 }
 
 AfterAll {
     Remove-Item Function:\Get-TestEnrichment -ErrorAction SilentlyContinue
-    Remove-Module MergeWith -ErrorAction SilentlyContinue
+    Remove-Item Function:\Get-TestNoIdentity -ErrorAction SilentlyContinue
+    Remove-Module JoinObject -ErrorAction SilentlyContinue
 }
 
 Describe 'Module exports' {
     It 'exports the Join-Object function' {
-        Get-Command Join-Object -Module MergeWith | Should -Not -BeNullOrEmpty
+        Get-Command Join-Object -Module JoinObject | Should -Not -BeNullOrEmpty
     }
 
     It 'exposes the Join alias resolving to Join-Object' {
@@ -74,5 +84,19 @@ Describe 'Join-Object' {
         $result = $source | Join Get-TestEnrichment
 
         $result.Extra | Should -Be 'extra-svc1'
+    }
+
+    It 'throws a terminating error when no identity parameter can be resolved' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        { $source | Join-Object Get-TestNoIdentity } |
+            Should -Throw -ErrorId 'IdentityParameterNotFound,Join-Object'
+    }
+
+    It 'treats a $null-valued source property as a collision' {
+        $source = [pscustomobject]@{ Name = 'svc1'; Status = $null }
+        $result = $source | Join-Object Get-TestEnrichment
+
+        $result.Status        | Should -BeNullOrEmpty
+        $result.Status_Second | Should -Be 'New'
     }
 }

@@ -1,14 +1,14 @@
-# MergeWith
+# JoinObject
 
-`MergeWith` is a PowerShell module providing the **`Join-Object`** function (alias **`Join`**) — a pipeline join for PowerShell. It takes objects from the pipeline, determines a common identity property (e.g. UPN or GUID), calls a second cmdlet with it, and merges the properties of both results into a single object.
+`JoinObject` is a PowerShell module providing the **`Join-Object`** function (alias **`Join`**) — a pipeline join for PowerShell. It takes objects from the pipeline, determines a common identity property (e.g. UPN or GUID), calls a second cmdlet with it, and merges the properties of both results into a single object.
 
 ## Installation
 
 Clone the repository and import the module:
 
 ```powershell
-git clone <repository-url> MergeWith
-Import-Module ./MergeWith/MergeWith.psd1
+git clone <repository-url> JoinObject
+Import-Module ./JoinObject/JoinObject.psd1
 ```
 
 ## Usage
@@ -47,9 +47,9 @@ Get-Help Join-Object -Full
 ## Project structure
 
 ```
-MergeWith/
-├── MergeWith.psd1            # Module manifest
-├── MergeWith.psm1            # Loader for the public functions
+JoinObject/
+├── JoinObject.psd1           # Module manifest
+├── JoinObject.psm1           # Loader for the public functions
 ├── src/
 │   └── Public/
 │       └── Join-Object.ps1   # Implementation of Join-Object (alias: Join)
