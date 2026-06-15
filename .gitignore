@@ -1,0 +1,20 @@
+# PowerShell / Build-Artefakte
+*.zip
+*.nupkg
+output/
+build/
+dist/
+
+# Test-Ergebnisse (Pester)
+testResults*.xml
+coverage*.xml
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
