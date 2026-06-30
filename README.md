@@ -69,6 +69,15 @@ Get-RemoteMailbox |
 
 No buffering, no repeated lookups, no computed-property gymnastics — just one pipe.
 
+### Beta: script-block support
+
+`Cmdlet` also accepts a script block instead of a cmdlet name. The full input object is exposed as `$_`, giving you complete control over the enrichment call — no identity discovery or auto-splatting in this mode:
+
+```powershell
+Get-RemoteMailbox |
+    Join-Object { Get-Mailbox -Identity $_.PrimarySmtpAddress -ErrorAction SilentlyContinue }
+```
+
 ## Stable vs. Beta
 
 This repository tracks two parallel versions so you can pick what fits your needs:
@@ -76,7 +85,7 @@ This repository tracks two parallel versions so you can pick what fits your need
 | Track      | Branch               | Latest release                                                                                  | Notes                                                |
 | ---------- | --------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
 | **Stable** | `main`                 | [v0.1.0](https://github.com/kreisi-dev/Join-Object/releases/tag/v0.1.0)                         | Recommended for production use.                       |
-| **Beta**   | `ScriptBlockSupport`   | [v0.2.0-beta.1](https://github.com/kreisi-dev/Join-Object/releases/tag/v0.2.0-beta.1)           | Adds script-block support for `Cmdlet`.                |
+| **Beta**   | `ScriptBlockSupport`   | [v0.2.0-beta.1](https://github.com/kreisi-dev/Join-Object/releases/tag/v0.2.0-beta.1)           | **You are here.** Adds script-block support for `Cmdlet`. |
 
 Check the [Releases page](https://github.com/kreisi-dev/Join-Object/releases) for the full list, including all prereleases. Beta releases are marked **Pre-release** on GitHub and are never the "Latest" release — install or clone them explicitly if you want to try upcoming features early.
 
