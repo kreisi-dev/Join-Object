@@ -100,3 +100,40 @@ Describe 'Join-Object' {
         $result.Status_Second | Should -Be 'New'
     }
 }
+
+Describe 'Join-Object with a script block' {
+    It 'exposes the whole input object as $_ and merges the result' {
+        $source = [pscustomobject]@{ Login = 'svc1'; Status = 'Old' }
+        $result = $source | Join-Object { Get-TestEnrichment -Name $_.Login }
+
+        $result.Login         | Should -Be 'svc1'
+        $result.Extra         | Should -Be 'extra-svc1'
+        $result.Status        | Should -Be 'Old'
+        $result.Status_Second | Should -Be 'New'
+    }
+
+    It 'does not require a recognized identity parameter' {
+        # Get-TestNoIdentity throws in the cmdlet-name form; a script block bypasses identity discovery.
+        $source = [pscustomobject]@{ Color = 'blue' }
+        $result = $source | Join-Object { Get-TestNoIdentity -Color $_.Color }
+
+        $result.Color | Should -Be 'blue'
+        $result.Shade | Should -Be 'dark'
+    }
+
+    It 'honors -Force for colliding properties' {
+        $source = [pscustomobject]@{ Login = 'svc1'; Status = 'Old' }
+        $result = $source | Join-Object { Get-TestEnrichment -Name $_.Login } -Force
+
+        $result.Status | Should -Be 'New'
+        $result.PSObject.Properties.Name | Should -Not -Contain 'Status_Second'
+    }
+
+    It 'passes the input through unchanged when the script block yields nothing' {
+        $source = [pscustomobject]@{ Login = 'svc1'; Status = 'Old' }
+        $result = $source | Join-Object { }
+
+        $result.Login | Should -Be 'svc1'
+        $result.PSObject.Properties.Name | Should -Not -Contain 'Extra'
+    }
+}

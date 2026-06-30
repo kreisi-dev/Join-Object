@@ -3,7 +3,7 @@
     RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.2.0'
 
     # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
@@ -38,7 +38,8 @@
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
-            ReleaseNotes = 'Initial release of Join-Object (alias: Join).'
+            Prerelease   = 'beta1'
+            ReleaseNotes = 'Beta: adds script-block support for the Cmdlet parameter, giving full control over the enrichment call via $_.'
         }
     }
 }

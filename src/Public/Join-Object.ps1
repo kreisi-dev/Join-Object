@@ -12,7 +12,12 @@ function Join-Object {
         Also available via the alias 'Join'.
 
     .PARAMETER Cmdlet
-        The name of the cmdlet to call for the enrichment (e.g., 'Get-ADUser', 'Get-Mailbox Statistics').
+        The cmdlet to call for the enrichment. Accepts either:
+          - The name of a cmdlet (e.g., 'Get-ADUser', 'Get-MailboxStatistics'). The identity
+            parameter is discovered automatically and the source identity value is splatted in.
+          - A script block (e.g., { Get-Mailbox -Identity $_.PrimarySmtpAddress }). The full input
+            object is exposed as $_ (and $PSItem), giving you complete control over the call. No
+            identity discovery or auto-splatting happens in this mode.
 
     .PARAMETER InputObject
         The object coming from the pipeline.
@@ -42,12 +47,18 @@ function Join-Object {
     .EXAMPLE
         $Data | Join-Object Get-ADUser -With @{Properties = "Department", "Office"} -Force
         Merges AD attributes and overwrites any existing 'Department' or 'Office' fields in the source data.
+
+    .EXAMPLE
+        Get-RemoteMailbox | Join-Object { Get-Mailbox -Identity $_.PrimarySmtpAddress -ErrorAction SilentlyContinue }
+        Script-block form: the input object is exposed as $_, so you control exactly how the target is called.
     #>
     [CmdletBinding()]
     [Alias('Join')]
     param(
         [Parameter(Mandatory, Position=0)]
-        [string] $Cmdlet,
+        [ValidateNotNull()]
+        # Either a cmdlet name ([string]) or a [scriptblock] for full control over the target call.
+        [object] $Cmdlet,
 
         [Parameter(ValueFromPipeline)]
         $InputObject,
@@ -61,66 +72,82 @@ function Join-Object {
     )
 
     begin {
-        # Resolve the target cmdlet. A missing cmdlet surfaces as a clean terminating error.
-        $cmdInfo = Get-Command $Cmdlet -ErrorAction Stop
-        $targetParams = @($cmdInfo.Parameters.Keys)
+        # A script block gives the caller full control over the target call: no cmdlet to resolve,
+        # no identity parameter to discover. The input object is exposed as $_ in process{}.
+        $isScriptBlock = $Cmdlet -is [scriptblock]
 
-        # Common identity parameter names used across many modules
-        $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
-        $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
+        if (-not $isScriptBlock) {
+            # Resolve the target cmdlet. A missing cmdlet surfaces as a clean terminating error.
+            $cmdInfo = Get-Command $Cmdlet -ErrorAction Stop
+            $targetParams = @($cmdInfo.Parameters.Keys)
 
-        if (-not $idParam) {
-            # Terminate up front so process{} never runs with an undefined identity parameter.
-            $errorRecord = [System.Management.Automation.ErrorRecord]::new(
-                [System.ArgumentException]::new("Could not determine an identity parameter for cmdlet '$Cmdlet'. Expected one of: $($preferredIdParams -join ', ')."),
-                'IdentityParameterNotFound',
-                [System.Management.Automation.ErrorCategory]::InvalidArgument,
-                $Cmdlet
-            )
-            $PSCmdlet.ThrowTerminatingError($errorRecord)
+            # Common identity parameter names used across many modules
+            $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
+            $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
+
+            if (-not $idParam) {
+                # Terminate up front so process{} never runs with an undefined identity parameter.
+                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                    [System.ArgumentException]::new("Could not determine an identity parameter for cmdlet '$Cmdlet'. Expected one of: $($preferredIdParams -join ', ')."),
+                    'IdentityParameterNotFound',
+                    [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                    $Cmdlet
+                )
+                $PSCmdlet.ThrowTerminatingError($errorRecord)
+            }
         }
     }
 
     process {
         if ($null -eq $InputObject) { return }
 
-        # 1. Locate the source property for identity
         $inputProps = $InputObject.PSObject.Properties
 
-        if ($IdentityProperty) {
-            $srcProp = $inputProps | Where-Object Name -eq $IdentityProperty
-        } else {
-            # Heuristic search for identity-related fields in the source object
-            $preferredProps = @("ExternalDirectoryObjectId","PrimarySmtpAddress","UserPrincipalName","Identity","Alias","Guid","Id","Name")
-            $srcProp = $inputProps | Where-Object { $preferredProps -contains $_.Name } | Select-Object -First 1
-        }
-
-        if (-not $srcProp) {
-            if ($IdentityProperty) {
-                Write-Warning "Input object has no '$IdentityProperty' property. Passing it through unchanged."
-            } else {
-                Write-Warning "No identity property found on the input object. Passing it through unchanged."
+        if ($isScriptBlock) {
+            # Script-block form: expose the whole input object as $_ and let the caller drive the call.
+            # Identity discovery, IdentityProperty and Options do not apply here.
+            $obj2 = try {
+                $InputObject | ForEach-Object $Cmdlet
+            } catch {
+                $null
             }
-            return $InputObject
-        }
+        } else {
+            # 1. Locate the source property for identity
+            if ($IdentityProperty) {
+                $srcProp = $inputProps | Where-Object Name -eq $IdentityProperty
+            } else {
+                # Heuristic search for identity-related fields in the source object
+                $preferredProps = @("ExternalDirectoryObjectId","PrimarySmtpAddress","UserPrincipalName","Identity","Alias","Guid","Id","Name")
+                $srcProp = $inputProps | Where-Object { $preferredProps -contains $_.Name } | Select-Object -First 1
+            }
 
-        # 2. Prepare Splatting for the target cmdlet
-        $splat = @{ $idParam = $srcProp.Value }
+            if (-not $srcProp) {
+                if ($IdentityProperty) {
+                    Write-Warning "Input object has no '$IdentityProperty' property. Passing it through unchanged."
+                } else {
+                    Write-Warning "No identity property found on the input object. Passing it through unchanged."
+                }
+                return $InputObject
+            }
 
-        if ($Options) {
-            foreach ($key in $Options.Keys) {
-                # Add user options if they don't conflict with the dynamic identity
-                if (-not $splat.ContainsKey($key)) {
-                    $splat[$key] = $Options[$key]
+            # 2. Prepare Splatting for the target cmdlet
+            $splat = @{ $idParam = $srcProp.Value }
+
+            if ($Options) {
+                foreach ($key in $Options.Keys) {
+                    # Add user options if they don't conflict with the dynamic identity
+                    if (-not $splat.ContainsKey($key)) {
+                        $splat[$key] = $Options[$key]
+                    }
                 }
             }
-        }
 
-        # 3. Execute secondary cmdlet
-        $obj2 = try {
-            & $Cmdlet @splat -ErrorAction Stop
-        } catch {
-            $null
+            # 3. Execute secondary cmdlet
+            $obj2 = try {
+                & $Cmdlet @splat -ErrorAction Stop
+            } catch {
+                $null
+            }
         }
 
         # If the target returns multiple objects, enrich from the first match.

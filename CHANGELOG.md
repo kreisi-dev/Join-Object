@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Pester tests under `tests/`.
+- `Join-Object` now accepts a script block for the `Cmdlet` parameter, exposing the
+  full input object as `$_` for complete control over the enrichment call (no identity
+  discovery or auto-splatting in this mode).
 
 ### Changed
 - Renamed the `Merge-With` function to the verb-approved `Join-Object` (alias `Join`).
