@@ -57,7 +57,28 @@ Get-Service |
     Select-Object Name, Status, CPU, WorkingSet
 ```
 
+`Join-Object` calls also chain, so you can pull data from three (or more) cmdlets in one pipeline:
+
+```powershell
+# Mailbox -> mailbox statistics -> AD user, joined in a single readable chain:
+Get-RemoteMailbox |
+    Join-Object Get-MailboxStatistics |
+    Join-Object Get-ADUser -IdentityProperty SamAccountName |
+    Select-Object Prim*, TotalItemSize, Enabled
+```
+
 No buffering, no repeated lookups, no computed-property gymnastics — just one pipe.
+
+## Stable vs. Beta
+
+This repository tracks two parallel versions so you can pick what fits your needs:
+
+| Track      | Branch               | Latest release                                                                                  | Notes                                                |
+| ---------- | --------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| **Stable** | `main`                 | [v0.1.0](https://github.com/kreisi-dev/Join-Object/releases/tag/v0.1.0)                         | Recommended for production use.                       |
+| **Beta**   | `ScriptBlockSupport`   | [v0.2.0-beta.1](https://github.com/kreisi-dev/Join-Object/releases/tag/v0.2.0-beta.1)           | Adds script-block support for `Cmdlet`.                |
+
+Check the [Releases page](https://github.com/kreisi-dev/Join-Object/releases) for the full list, including all prereleases. Beta releases are marked **Pre-release** on GitHub and are never the "Latest" release — install or clone them explicitly if you want to try upcoming features early.
 
 ## Installation
 
