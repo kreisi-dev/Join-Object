@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 168" role="img"
+     aria-label="Schema: Two cmdlet outputs that share a common identity (ID) — one with fields A and B, the other with C and D — are merged by Join-Object on that identity into a single object with ID, A, B, C and D.">
+  <style>
+    .node       { fill: #ecf9f1; stroke: #2f3540; stroke-width: 1.25; }
+    .cell-line  { stroke: #2f3540; stroke-width: .75; opacity: .4; }
+    .node-label { fill: #1c1c1e; font-family: system-ui, sans-serif; font-size: 11px; font-weight: 600; }
+    .cap        { fill: #565d6b; font-family: system-ui, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; }
+    .link       { stroke: #2f3540; stroke-width: 1.25; fill: none; stroke-linecap: round; }
+    .arrow      { fill: #2f3540; }
+    .link-label { fill: #565d6b; font-family: Georgia, serif; font-style: italic; font-size: 10px; }
+    @media (prefers-color-scheme: dark) {
+      .node       { fill: #232d27; stroke: #c7c9cf; }
+      .cell-line  { stroke: #c7c9cf; }
+      .node-label { fill: #f5f5f7; }
+      .cap        { fill: #98989d; }
+      .link       { stroke: #c7c9cf; }
+      .arrow      { fill: #c7c9cf; }
+      .link-label { fill: #98989d; }
+    }
+  </style>
+  <defs>
+    <marker id="jo-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrow" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+
+  <text class="cap" x="85" y="24" text-anchor="middle">CMDLET A · ID + A + B</text>
+  <rect class="node" x="20" y="32" width="130" height="30" rx="6"/>
+  <line class="cell-line" x1="63.3" y1="34" x2="63.3" y2="60"/>
+  <line class="cell-line" x1="106.7" y1="34" x2="106.7" y2="60"/>
+  <text class="node-label" x="41.7" y="51" text-anchor="middle">ID</text>
+  <text class="node-label" x="85" y="51" text-anchor="middle">A</text>
+  <text class="node-label" x="128.3" y="51" text-anchor="middle">B</text>
+
+  <text class="cap" x="275" y="24" text-anchor="middle">CMDLET B · ID + C + D</text>
+  <rect class="node" x="210" y="32" width="130" height="30" rx="6"/>
+  <line class="cell-line" x1="253.3" y1="34" x2="253.3" y2="60"/>
+  <line class="cell-line" x1="296.7" y1="34" x2="296.7" y2="60"/>
+  <text class="node-label" x="231.7" y="51" text-anchor="middle">ID</text>
+  <text class="node-label" x="275" y="51" text-anchor="middle">C</text>
+  <text class="node-label" x="318.3" y="51" text-anchor="middle">D</text>
+
+  <path class="link" d="M85 66 L150 104" marker-end="url(#jo-arrow)"/>
+  <path class="link" d="M275 66 L210 104" marker-end="url(#jo-arrow)"/>
+  <text class="link-label" x="180" y="88" text-anchor="middle">by identity</text>
+
+  <rect class="node" x="80" y="110" width="200" height="30" rx="6"/>
+  <line class="cell-line" x1="120" y1="112" x2="120" y2="138"/>
+  <line class="cell-line" x1="160" y1="112" x2="160" y2="138"/>
+  <line class="cell-line" x1="200" y1="112" x2="200" y2="138"/>
+  <line class="cell-line" x1="240" y1="112" x2="240" y2="138"/>
+  <text class="node-label" x="100" y="129" text-anchor="middle">ID</text>
+  <text class="node-label" x="140" y="129" text-anchor="middle">A</text>
+  <text class="node-label" x="180" y="129" text-anchor="middle">B</text>
+  <text class="node-label" x="220" y="129" text-anchor="middle">C</text>
+  <text class="node-label" x="260" y="129" text-anchor="middle">D</text>
+  <text class="cap" x="180" y="160" text-anchor="middle">ONE OBJECT · ID + A + B + C + D</text>
+</svg>

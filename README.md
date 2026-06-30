@@ -37,6 +37,10 @@ Both work, but both hurt: the loop throws the pipeline away, and the computed pr
 
 ## Enter Join-Object
 
+<p align="center">
+  <img src="docs/join-object.svg" alt="Two cmdlet outputs sharing a common identity (ID) are merged by Join-Object into a single object with all fields." width="460">
+</p>
+
 `Join-Object` (alias **`Join`**) brings the join back into the pipeline. For each object it finds a shared identity (like `PrimarySmtpAddress` or a GUID), calls the second cmdlet **once**, and merges both results into a single object — so you just keep piping:
 
 ```powershell
