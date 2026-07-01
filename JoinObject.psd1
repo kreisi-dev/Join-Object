@@ -3,7 +3,7 @@
     RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
-    ModuleVersion     = '0.1.1'
+    ModuleVersion     = '0.9.0'
 
     # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
@@ -38,7 +38,7 @@
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
-            ReleaseNotes = 'Fix: repeated property collisions now get an incrementing suffix (_2, _3, ...) instead of overwriting a fixed _Second name.'
+            ReleaseNotes = 'Adds script-block support for the Cmdlet parameter, giving full control over the enrichment call via $_. Repeated property collisions now get an incrementing suffix (_2, _3, ...) instead of overwriting a fixed _Second name.'
         }
     }
 }
