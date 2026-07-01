@@ -97,7 +97,7 @@ Get-ADUser -Filter "Name -like 'John*'" |
     Join-Object Get-Mailbox -Options @{ ErrorAction = 'SilentlyContinue' }
 
 # -With is an alias for -Options; -Force overwrites existing fields instead of
-# suffixing collisions with _Second
+# suffixing collisions with _2, _3, ...
 $Data | Join-Object Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
 ```
 
@@ -115,7 +115,7 @@ Get-Help Join-Object -Full
 | `InputObject`      | The object coming from the pipeline.                                         |
 | `IdentityProperty` | Optional: explicit identity property of the input object.                    |
 | `Options`          | Hashtable of additional parameters for the target cmdlet (alias: `With`).    |
-| `Force`            | Overwrites existing properties instead of suffixing them with `_Second`.     |
+| `Force`            | Overwrites existing properties instead of suffixing them with `_2`, `_3`, ... |
 
 ## Project structure
 

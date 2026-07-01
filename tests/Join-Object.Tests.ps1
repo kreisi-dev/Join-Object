@@ -48,12 +48,12 @@ Describe 'Join-Object' {
         $result.Extra | Should -Be 'extra-svc1'
     }
 
-    It 'suffixes colliding properties with _Second by default' {
+    It 'suffixes colliding properties with _2 by default' {
         $source = [pscustomobject]@{ Name = 'svc1'; Status = 'Old' }
         $result = $source | Join-Object Get-TestEnrichment
 
         $result.Status        | Should -Be 'Old'
-        $result.Status_Second | Should -Be 'New'
+        $result.Status_2 | Should -Be 'New'
     }
 
     It 'overwrites colliding properties when -Force is used' {
@@ -61,7 +61,7 @@ Describe 'Join-Object' {
         $result = $source | Join-Object Get-TestEnrichment -Force
 
         $result.Status | Should -Be 'New'
-        $result.PSObject.Properties.Name | Should -Not -Contain 'Status_Second'
+        $result.PSObject.Properties.Name | Should -Not -Contain 'Status_2'
     }
 
     It 'honors an explicit IdentityProperty' {
@@ -96,7 +96,17 @@ Describe 'Join-Object' {
         $source = [pscustomobject]@{ Name = 'svc1'; Status = $null }
         $result = $source | Join-Object Get-TestEnrichment
 
-        $result.Status        | Should -BeNullOrEmpty
-        $result.Status_Second | Should -Be 'New'
+        $result.Status   | Should -BeNullOrEmpty
+        $result.Status_2 | Should -Be 'New'
+    }
+
+    It 'increments the suffix on repeated collisions instead of overwriting _2' {
+        # Simulates chaining several Join-Object calls that all yield a 'Status' property.
+        $source = [pscustomobject]@{ Name = 'svc1'; Status = 'Old'; Status_2 = 'FromSecondJoin' }
+        $result = $source | Join-Object Get-TestEnrichment
+
+        $result.Status   | Should -Be 'Old'
+        $result.Status_2 | Should -Be 'FromSecondJoin'
+        $result.Status_3 | Should -Be 'New'
     }
 }

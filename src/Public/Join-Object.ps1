@@ -146,8 +146,14 @@ function Join-Object {
                 if ($Force) {
                     $mergedResult[$p.Name] = $p.Value
                 } else {
-                    # Avoid property collisions by adding a suffix
-                    $mergedResult["$($p.Name)_Second"] = $p.Value
+                    # Avoid property collisions by adding an incrementing suffix (_2, _3, ...) so
+                    # repeated collisions - e.g. from chaining several Join-Object calls - don't
+                    # silently overwrite each other under the same fixed name.
+                    $suffix = 2
+                    while ($mergedResult.Contains("$($p.Name)_$suffix")) {
+                        $suffix++
+                    }
+                    $mergedResult["$($p.Name)_$suffix"] = $p.Value
                 }
             } else {
                 $mergedResult[$p.Name] = $p.Value
