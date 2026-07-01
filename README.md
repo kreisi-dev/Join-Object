@@ -110,6 +110,20 @@ Get-ADUser -Filter "Name -like 'John*'" |
 $Data | Join-Object Get-ADUser -With @{ Properties = 'Department', 'Office' } -Force
 ```
 
+### Property collisions
+
+If a property name exists on both the input object and the enrichment result, the second
+value is kept under an incrementing suffix (`_2`, `_3`, ...) instead of being dropped:
+
+```powershell
+# Chaining calls that each return an 'Identity' property keeps every value:
+Get-RemoteMailbox |
+    Join-Object Get-MailboxStatistics |   # adds Identity_2
+    Join-Object Get-ADUser -IdentityProperty SamAccountName   # adds Identity_3
+```
+
+Pass `-Force` to overwrite the existing value instead of suffixing it.
+
 Full help is available after import:
 
 ```powershell
