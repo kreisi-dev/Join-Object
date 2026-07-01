@@ -38,8 +38,8 @@
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = ''
             ProjectUri   = ''
-            Prerelease   = 'beta1'
-            ReleaseNotes = 'Beta: adds script-block support for the Cmdlet parameter, giving full control over the enrichment call via $_.'
+            Prerelease   = 'beta2'
+            ReleaseNotes = 'Beta: adds script-block support for the Cmdlet parameter, giving full control over the enrichment call via $_. beta2: repeated property collisions now get an incrementing suffix (_2, _3, ...) instead of overwriting a fixed _Second name.'
         }
     }
 }
