@@ -1,7 +1,7 @@
 #Requires -Modules Pester
 
 BeforeAll {
-    $modulePath = Join-Path $PSScriptRoot '..' 'JoinObject.psd1'
+    $modulePath = Join-Path -Path $PSScriptRoot -ChildPath '../JoinObject.psd1'
     Import-Module $modulePath -Force
 
     # A target cmdlet used for enrichment. 'Name' is a recognized identity parameter.
@@ -13,8 +13,10 @@ BeforeAll {
         [pscustomobject]@{ Status = 'New'; Extra = "extra-$Name" }
     }
 
-    # A target cmdlet without any recognized identity parameter.
+    # A target cmdlet without any recognized identity parameter. The parameter only
+    # needs to exist for Join-Object's discovery; its value is irrelevant.
     function global:Get-TestNoIdentity {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Color', Justification = 'Test double: the parameter must exist for identity discovery, its value is not used.')]
         [CmdletBinding()]
         param(
             [Parameter(Mandatory)] $Color
@@ -24,6 +26,7 @@ BeforeAll {
 
     # A target cmdlet that always fails, to exercise the passthrough-on-error path.
     function global:Get-TestFailing {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Name', Justification = 'Test double: the parameter must exist for identity discovery, its value is not used.')]
         [CmdletBinding()]
         param(
             [Parameter(Mandatory)] $Name
@@ -42,6 +45,7 @@ BeforeAll {
 
     # Returns two objects, to exercise the multiple-match warning.
     function global:Get-TestMultiMatch {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Name', Justification = 'Test double: the parameter must exist for identity discovery, its value is not used.')]
         [CmdletBinding()]
         param(
             [Parameter(Mandatory)] $Name
