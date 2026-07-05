@@ -51,9 +51,11 @@ Get-Mailbox -RecipientTypeDetails SharedMailbox |
 ```
 
 ```powershell
-# It works for any pair of cmdlets that share an identity — e.g. services and their processes:
+# It works for any pair of cmdlets that share an identity — e.g. services and their processes.
+# -IdentityProperty picks the source property; -TargetParameter names the parameter of the
+# target cmdlet (automatic discovery would pick Get-Process -Id here):
 Get-Service |
-    Join Get-Process -IdentityProperty Name |
+    Join Get-Process -IdentityProperty Name -TargetParameter Name |
     Select-Object Name, Status, CPU, WorkingSet
 ```
 
@@ -125,9 +127,10 @@ Get-Help Join-Object -Full
 
 | Parameter          | Description                                                                  |
 | ------------------ | ---------------------------------------------------------------------------- |
-| `Cmdlet`           | Name of the cmdlet called to enrich the data.                                |
+| `Cmdlet`           | Name of the cmdlet (or a script block) called to enrich the data.            |
 | `InputObject`      | The object coming from the pipeline.                                         |
 | `IdentityProperty` | Optional: explicit identity property of the input object.                    |
+| `TargetParameter`  | Optional: explicit parameter of the target cmdlet that receives the identity. |
 | `Options`          | Hashtable of additional parameters for the target cmdlet (alias: `With`).    |
 | `Force`            | Overwrites existing properties instead of suffixing them with `_2`, `_3`, ... |
 

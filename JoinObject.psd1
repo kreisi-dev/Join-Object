@@ -3,7 +3,7 @@
     RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
-    ModuleVersion     = '0.9.0'
+    ModuleVersion     = '0.9.1'
 
     # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
@@ -36,9 +36,9 @@
     PrivateData = @{
         PSData = @{
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
-            LicenseUri   = ''
-            ProjectUri   = ''
-            ReleaseNotes = 'Adds script-block support for the Cmdlet parameter, giving full control over the enrichment call via $_. Repeated property collisions now get an incrementing suffix (_2, _3, ...) instead of overwriting a fixed _Second name.'
+            LicenseUri   = 'https://github.com/kreisi-dev/Join-Object/blob/main/LICENSE'
+            ProjectUri   = 'https://github.com/kreisi-dev/Join-Object'
+            ReleaseNotes = 'Adds -TargetParameter to explicitly name the target cmdlet''s identity parameter. Failed enrichment calls are now reported on the verbose stream, an ErrorAction from -Options is no longer overridden, the identity heuristic follows the preferred-list priority, and multiple matches produce a warning.'
         }
     }
 }

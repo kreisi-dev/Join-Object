@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-07-05
+
+### Added
+- New `-TargetParameter` parameter to explicitly name the target cmdlet's identity
+  parameter when the automatic discovery picks the wrong one (e.g. `Get-Process`
+  resolves to `-Id`, breaking joins by name).
+- `Join-Object` now warns when the target cmdlet returns multiple objects and only
+  the first one is merged.
+
+### Changed
+- Failed enrichment calls are now reported on the verbose stream instead of being
+  swallowed silently, so failures are distinguishable from "no match".
+- An `ErrorAction` supplied via `-Options` now reaches the target cmdlet instead of
+  being overridden by the built-in `-ErrorAction Stop` default.
+- The identity-property heuristic now follows the preferred-list priority instead of
+  the input object's property order, matching how the target parameter is discovered.
+- Passing something other than a cmdlet name or script block as `-Cmdlet` now fails
+  with a clear terminating error (`InvalidCmdletArgument`).
+- Filled in `ProjectUri` and `LicenseUri` in the module manifest.
+
 ## [0.9.0] - 2026-07-01
 
 ### Added

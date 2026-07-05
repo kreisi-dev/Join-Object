@@ -25,6 +25,12 @@ function Join-Object {
     .PARAMETER IdentityProperty
         Optional: Explicitly define which property of the InputObject should be used as the identity.
 
+    .PARAMETER TargetParameter
+        Optional: Explicitly name the parameter of the target cmdlet that receives the identity
+        value, instead of relying on automatic discovery. Use this when the discovery picks the
+        wrong parameter (e.g. Get-Process resolves to -Id, but you want -Name). Not applicable
+        in script-block mode.
+
     .PARAMETER Options
         A hashtable of additional parameters to pass to the target cmdlet (e.g., @{Properties = '*'}).
         Aliases: Args, With, Splat, Parameters
@@ -37,8 +43,9 @@ function Join-Object {
         Simple merge: Adds mailbox statistics to your mailbox objects.
 
     .EXAMPLE
-        Get-Service | Join Get-Process -IdentityProperty Name
+        Get-Service | Join Get-Process -IdentityProperty Name -TargetParameter Name
         Joins services with their corresponding processes by name (using the 'Join' alias).
+        -TargetParameter is needed here because automatic discovery would pick Get-Process -Id.
 
     .EXAMPLE
         Get-ADUser -Filter "Name -like 'John*'" | Join-Object Get-Mailbox -Options @{ErrorAction = 'SilentlyContinue'}
@@ -65,6 +72,8 @@ function Join-Object {
 
         [string] $IdentityProperty,
 
+        [string] $TargetParameter,
+
         [Alias("Args", "With", "Splat", "Parameters")]
         [hashtable] $Options,
 
@@ -76,24 +85,48 @@ function Join-Object {
         # no identity parameter to discover. The input object is exposed as $_ in process{}.
         $isScriptBlock = $Cmdlet -is [scriptblock]
 
+        if (-not $isScriptBlock -and $Cmdlet -isnot [string]) {
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                [System.ArgumentException]::new("The Cmdlet parameter must be a cmdlet name ([string]) or a [scriptblock], but got [$($Cmdlet.GetType().Name)]."),
+                'InvalidCmdletArgument',
+                [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                $Cmdlet
+            )
+            $PSCmdlet.ThrowTerminatingError($errorRecord)
+        }
+
         if (-not $isScriptBlock) {
             # Resolve the target cmdlet. A missing cmdlet surfaces as a clean terminating error.
             $cmdInfo = Get-Command $Cmdlet -ErrorAction Stop
             $targetParams = @($cmdInfo.Parameters.Keys)
 
-            # Common identity parameter names used across many modules
-            $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
-            $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
+            if ($TargetParameter) {
+                # Explicit override: skip discovery, but fail fast if the parameter doesn't exist.
+                if ($targetParams -notcontains $TargetParameter) {
+                    $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                        [System.ArgumentException]::new("Cmdlet '$Cmdlet' has no parameter '$TargetParameter'."),
+                        'TargetParameterNotFound',
+                        [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                        $TargetParameter
+                    )
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                }
+                $idParam = $TargetParameter
+            } else {
+                # Common identity parameter names used across many modules
+                $preferredIdParams = @("Identity","UserId","Mailbox","PrimarySmtpAddress","Guid","Id","Name")
+                $idParam = $preferredIdParams | Where-Object { $targetParams -contains $_ } | Select-Object -First 1
 
-            if (-not $idParam) {
-                # Terminate up front so process{} never runs with an undefined identity parameter.
-                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
-                    [System.ArgumentException]::new("Could not determine an identity parameter for cmdlet '$Cmdlet'. Expected one of: $($preferredIdParams -join ', ')."),
-                    'IdentityParameterNotFound',
-                    [System.Management.Automation.ErrorCategory]::InvalidArgument,
-                    $Cmdlet
-                )
-                $PSCmdlet.ThrowTerminatingError($errorRecord)
+                if (-not $idParam) {
+                    # Terminate up front so process{} never runs with an undefined identity parameter.
+                    $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                        [System.ArgumentException]::new("Could not determine an identity parameter for cmdlet '$Cmdlet'. Expected one of: $($preferredIdParams -join ', '). Use -TargetParameter to name it explicitly."),
+                        'IdentityParameterNotFound',
+                        [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                        $Cmdlet
+                    )
+                    $PSCmdlet.ThrowTerminatingError($errorRecord)
+                }
             }
         }
     }
@@ -109,6 +142,9 @@ function Join-Object {
             $obj2 = try {
                 $InputObject | ForEach-Object $Cmdlet
             } catch {
+                # Failed enrichment falls back to passthrough; surface the reason on the
+                # verbose stream so failures are distinguishable from "no match".
+                Write-Verbose "Enrichment script block failed: $($_.Exception.Message). Passing the input object through unchanged."
                 $null
             }
         } else {
@@ -116,9 +152,11 @@ function Join-Object {
             if ($IdentityProperty) {
                 $srcProp = $inputProps | Where-Object Name -eq $IdentityProperty
             } else {
-                # Heuristic search for identity-related fields in the source object
+                # Heuristic search for identity-related fields in the source object. Iterate the
+                # preferred list (not the object's properties) so the list order decides the
+                # priority - matching how the target parameter is discovered in begin{}.
                 $preferredProps = @("ExternalDirectoryObjectId","PrimarySmtpAddress","UserPrincipalName","Identity","Alias","Guid","Id","Name")
-                $srcProp = $inputProps | Where-Object { $preferredProps -contains $_.Name } | Select-Object -First 1
+                $srcProp = $preferredProps | ForEach-Object { $inputProps[$_] } | Where-Object { $_ } | Select-Object -First 1
             }
 
             if (-not $srcProp) {
@@ -142,23 +180,37 @@ function Join-Object {
                 }
             }
 
+            # Default to a terminating ErrorAction so failures reach the catch below,
+            # but let an ErrorAction supplied via -Options win instead of overriding it.
+            if (-not $splat.ContainsKey('ErrorAction')) {
+                $splat['ErrorAction'] = 'Stop'
+            }
+
             # 3. Execute secondary cmdlet
             $obj2 = try {
-                & $Cmdlet @splat -ErrorAction Stop
+                & $Cmdlet @splat
             } catch {
+                # Failed enrichment falls back to passthrough; surface the reason on the
+                # verbose stream so failures are distinguishable from "no match".
+                Write-Verbose "Call to '$Cmdlet' with $idParam '$($srcProp.Value)' failed: $($_.Exception.Message). Passing the input object through unchanged."
                 $null
             }
         }
 
-        # If the target returns multiple objects, enrich from the first match.
+        # If the target returns multiple objects, enrich from the first match - but say so,
+        # instead of silently dropping the rest.
         if ($obj2 -is [System.Collections.IEnumerable] -and $obj2 -isnot [string]) {
-            $obj2 = $obj2 | Select-Object -First 1
+            $matches2 = @($obj2)
+            if ($matches2.Count -gt 1) {
+                Write-Warning "The enrichment returned $($matches2.Count) objects; merging only the first one."
+            }
+            $obj2 = $matches2 | Select-Object -First 1
         }
 
         # If no match is found, pass through the original object
         if ($null -eq $obj2) { return $InputObject }
 
-        # 4. Merge data using an ordered dictionary for performance
+        # 4. Merge data into an ordered dictionary to preserve the property order
         $mergedResult = [ordered]@{}
 
         # Load properties from source object

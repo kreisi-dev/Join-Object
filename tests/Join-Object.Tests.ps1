@@ -21,11 +21,57 @@ BeforeAll {
         )
         [pscustomobject]@{ Shade = 'dark' }
     }
+
+    # A target cmdlet that always fails, to exercise the passthrough-on-error path.
+    function global:Get-TestFailing {
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)] $Name
+        )
+        throw 'boom'
+    }
+
+    # Echoes the ErrorAction it was called with, to verify -Options is not overridden.
+    function global:Get-TestEchoEA {
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)] $Name
+        )
+        [pscustomobject]@{ EffectiveEA = [string]$PSBoundParameters['ErrorAction'] }
+    }
+
+    # Returns two objects, to exercise the multiple-match warning.
+    function global:Get-TestMultiMatch {
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)] $Name
+        )
+        [pscustomobject]@{ Rank = 'first' }
+        [pscustomobject]@{ Rank = 'second' }
+    }
+
+    # Mimics Get-Process: -Id wins the automatic discovery, but only -Name accepts a string.
+    function global:Get-TestAmbiguous {
+        [CmdletBinding()]
+        param(
+            [int] $Id,
+            [string] $Name
+        )
+        if ($PSBoundParameters.ContainsKey('Name')) {
+            [pscustomobject]@{ Matched = "name-$Name" }
+        } elseif ($PSBoundParameters.ContainsKey('Id')) {
+            [pscustomobject]@{ Matched = "id-$Id" }
+        }
+    }
 }
 
 AfterAll {
     Remove-Item Function:\Get-TestEnrichment -ErrorAction SilentlyContinue
     Remove-Item Function:\Get-TestNoIdentity -ErrorAction SilentlyContinue
+    Remove-Item Function:\Get-TestFailing -ErrorAction SilentlyContinue
+    Remove-Item Function:\Get-TestEchoEA -ErrorAction SilentlyContinue
+    Remove-Item Function:\Get-TestMultiMatch -ErrorAction SilentlyContinue
+    Remove-Item Function:\Get-TestAmbiguous -ErrorAction SilentlyContinue
     Remove-Module JoinObject -ErrorAction SilentlyContinue
 }
 
@@ -100,6 +146,91 @@ Describe 'Join-Object' {
         $result.Status_2 | Should -Be 'New'
     }
 
+    It 'picks the identity property by preferred-list priority, not by property order' {
+        # 'Alias' ranks higher than 'Name' in the preferred list, even though 'Name' comes first.
+        $source = [pscustomobject]@{ Name = 'n1'; Alias = 'a1' }
+        $result = $source | Join-Object Get-TestEnrichment
+
+        $result.Extra | Should -Be 'extra-a1'
+    }
+
+    It 'merges the first object and warns when the target returns multiple matches' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $output = $source | Join-Object Get-TestMultiMatch 3>&1
+        $warnings = @($output | Where-Object { $_ -is [System.Management.Automation.WarningRecord] })
+        $result = @($output | Where-Object { $_ -isnot [System.Management.Automation.WarningRecord] })
+
+        $warnings.Count | Should -Be 1
+        $warnings[0].Message | Should -Match '2 objects'
+        $result[0].Rank | Should -Be 'first'
+    }
+
+    It 'throws a terminating error when Cmdlet is neither a string nor a script block' {
+        { [pscustomobject]@{ Name = 'svc1' } | Join-Object 42 } |
+            Should -Throw -ErrorId 'InvalidCmdletArgument,Join-Object'
+    }
+
+    It 'calls the target cmdlet with ErrorAction Stop by default' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $result = $source | Join-Object Get-TestEchoEA
+
+        $result.EffectiveEA | Should -Be 'Stop'
+    }
+
+    It 'lets an ErrorAction from -Options win over the built-in default' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $result = $source | Join-Object Get-TestEchoEA -Options @{ ErrorAction = 'SilentlyContinue' }
+
+        $result.EffectiveEA | Should -Be 'SilentlyContinue'
+    }
+
+    It 'passes additional -Options parameters through to the target cmdlet' {
+        $source = [pscustomobject]@{ Login = 'svc1' }
+        $result = $source | Join-Object Get-TestEnrichment -IdentityProperty Login -Options @{ Verbose = $false }
+
+        $result.Extra | Should -Be 'extra-svc1'
+    }
+
+    It 'routes the identity to an explicitly named target parameter' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $result = $source | Join-Object Get-TestAmbiguous -TargetParameter Name
+
+        $result.Matched | Should -Be 'name-svc1'
+    }
+
+    It 'falls back to passthrough when automatic discovery picks an incompatible parameter' {
+        # Discovery prefers -Id over -Name; binding the string to [int] fails -> passthrough.
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $result = $source | Join-Object Get-TestAmbiguous
+
+        $result.PSObject.Properties.Name | Should -Not -Contain 'Matched'
+        $result.Name | Should -Be 'svc1'
+    }
+
+    It 'throws a terminating error when the explicit target parameter does not exist' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        { $source | Join-Object Get-TestEnrichment -TargetParameter DoesNotExist } |
+            Should -Throw -ErrorId 'TargetParameterNotFound,Join-Object'
+    }
+
+    It 'passes the input through unchanged when the target cmdlet fails' {
+        $source = [pscustomobject]@{ Name = 'svc1'; Status = 'Old' }
+        $result = $source | Join-Object Get-TestFailing
+
+        $result.Status | Should -Be 'Old'
+        $result.PSObject.Properties.Name | Should -Not -Contain 'Extra'
+    }
+
+    It 'reports a failing target cmdlet on the verbose stream' {
+        $source = [pscustomobject]@{ Name = 'svc1' }
+        $output = $source | Join-Object Get-TestFailing -Verbose 4>&1
+        $verbose = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+
+        $verbose.Count | Should -BeGreaterThan 0
+        $verbose[-1].Message | Should -Match 'boom'
+        $verbose[-1].Message | Should -Match 'Get-TestFailing'
+    }
+
     It 'increments the suffix on repeated collisions instead of overwriting _2' {
         # Simulates chaining several Join-Object calls that all yield a 'Status' property.
         $source = [pscustomobject]@{ Name = 'svc1'; Status = 'Old'; Status_2 = 'FromSecondJoin' }
@@ -145,5 +276,16 @@ Describe 'Join-Object with a script block' {
 
         $result.Login | Should -Be 'svc1'
         $result.PSObject.Properties.Name | Should -Not -Contain 'Extra'
+    }
+
+    It 'reports a failing script block on the verbose stream and passes the input through' {
+        $source = [pscustomobject]@{ Login = 'svc1' }
+        $output = $source | Join-Object { throw 'boom' } -Verbose 4>&1
+        $verbose = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+        $result = @($output | Where-Object { $_ -isnot [System.Management.Automation.VerboseRecord] })
+
+        $verbose.Count | Should -BeGreaterThan 0
+        $verbose[-1].Message | Should -Match 'boom'
+        $result[0].Login | Should -Be 'svc1'
     }
 }
