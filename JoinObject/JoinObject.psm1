@@ -1,17 +1,21 @@
-# JoinObject.psm1
-# Loads all public functions from src/Public and exports them.
+# Dot-source every function file under Public/ and Private/, then export only the
+# public functions. New public functions must also be listed in FunctionsToExport
+# in the module manifest (JoinObject.psd1) to be visible to consumers.
 
-$Public = @(Get-ChildItem -Path "$PSScriptRoot/src/Public/*.ps1" -ErrorAction SilentlyContinue)
+$Public  = @(Get-ChildItem -Path "$PSScriptRoot/Public/*.ps1"  -ErrorAction SilentlyContinue)
+$Private = @(Get-ChildItem -Path "$PSScriptRoot/Private/*.ps1" -ErrorAction SilentlyContinue)
 
-foreach ($file in $Public) {
+foreach ($file in @($Public + $Private)) {
     try {
         . $file.FullName
     } catch {
-        Write-Error "Failed to load function $($file.FullName): $($_.Exception.Message)"
+        throw "Failed to import function $($file.FullName): $_"
     }
 }
 
-Export-ModuleMember -Function $Public.BaseName -Alias '*'
+if ($Public.Count -gt 0) {
+    Export-ModuleMember -Function $Public.BaseName -Alias '*'
+}
 
 # Version metadata (ModuleVersion, Prerelease, ...) only reaches Get-Command when the
 # module is imported via its manifest. A direct 'Import-Module .../JoinObject.psm1' bypasses

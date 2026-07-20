@@ -1,35 +1,44 @@
-name: Publish to PowerShell Gallery
+name: Release
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    tags: ['v*']
 
 jobs:
   publish:
-    # Pre-releases follow the beta flow and are not pushed to the Gallery.
-    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the GitHub release
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v5
 
-      - name: Stage module layout
-        shell: pwsh
+      - name: Verify tag matches module version
         run: |
-          # Publish-Module requires the folder name to match the module name.
-          $staging = Join-Path $env:RUNNER_TEMP 'JoinObject'
-          New-Item -ItemType Directory -Path $staging | Out-Null
-          Copy-Item -Path JoinObject.psd1, JoinObject.psm1, LICENSE, README.md -Destination $staging
-          Copy-Item -Path src -Destination $staging -Recurse
-          $manifest = Test-ModuleManifest -Path (Join-Path $staging 'JoinObject.psd1')
-          Write-Host "Staged $($manifest.Name) $($manifest.Version)"
+          $manifest = Test-ModuleManifest ./JoinObject/JoinObject.psd1
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
+          if ("$($manifest.Version)" -ne $tag) {
+            throw "Tag '${{ github.ref_name }}' does not match ModuleVersion $($manifest.Version)."
+          }
 
-      - name: Publish to PowerShell Gallery
-        shell: pwsh
+      - name: Run Pester tests
+        run: |
+          Install-Module -Name Pester -MinimumVersion 5.5 -Force -SkipPublisherCheck -Scope CurrentUser
+          Invoke-Pester tests/ -CI
+
+      - name: Publish to the PowerShell Gallery
         env:
           PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
         run: |
           if (-not $env:PSGALLERY_API_KEY) {
-              throw 'The PSGALLERY_API_KEY repository secret is not set.'
+            throw 'The PSGALLERY_API_KEY repository secret is not set.'
           }
-          Publish-Module -Path (Join-Path $env:RUNNER_TEMP 'JoinObject') -NuGetApiKey $env:PSGALLERY_API_KEY
+          Publish-PSResource -Path ./JoinObject -Repository PSGallery -ApiKey $env:PSGALLERY_API_KEY
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' --title '${{ github.ref_name }}' --generate-notes --verify-tag
+        shell: bash

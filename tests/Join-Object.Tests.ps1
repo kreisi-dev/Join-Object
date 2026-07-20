@@ -1,7 +1,7 @@
 #Requires -Modules Pester
 
 BeforeAll {
-    $modulePath = Join-Path -Path $PSScriptRoot -ChildPath '../JoinObject.psd1'
+    $modulePath = Join-Path -Path $PSScriptRoot -ChildPath '../JoinObject/JoinObject.psd1'
     Import-Module $modulePath -Force
 
     # A target cmdlet used for enrichment. 'Name' is a recognized identity parameter.

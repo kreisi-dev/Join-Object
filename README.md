@@ -147,14 +147,14 @@ Get-Help Join-Object -Full
 ## Project structure
 
 ```
-JoinObject/
-├── JoinObject.psd1           # Module manifest
-├── JoinObject.psm1           # Loader for the public functions
-├── src/
+Join-Object/
+├── JoinObject/
+│   ├── JoinObject.psd1           # Module manifest
+│   ├── JoinObject.psm1           # Loader for the public functions
 │   └── Public/
-│       └── Join-Object.ps1   # Implementation of Join-Object (alias: Join)
+│       └── Join-Object.ps1       # Implementation of Join-Object (alias: Join)
 └── tests/
-    └── Join-Object.Tests.ps1 # Pester tests
+    └── Join-Object.Tests.ps1     # Pester tests
 ```
 
 ## Testing
