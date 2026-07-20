@@ -1,5 +1,7 @@
 # JoinObject
 
+[![CI](https://github.com/kreisi-dev/Join-Object/actions/workflows/ci.yml/badge.svg)](https://github.com/kreisi-dev/Join-Object/actions/workflows/ci.yml)
+
 PowerShell's pipeline lets you write remarkably elegant one-liners. As long as you stay within a single cmdlet's output, life is good:
 
 ```powershell
