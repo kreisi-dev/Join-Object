@@ -86,10 +86,16 @@ Check the [Releases page](https://github.com/kreisi-dev/Join-Object/releases) fo
 
 ## Installation
 
-Clone the repository and import the module:
+From the [PowerShell Gallery](https://www.powershellgallery.com/packages/JoinObject):
 
 ```powershell
-git clone <repository-url> JoinObject
+Install-Module -Name JoinObject
+```
+
+Or clone the repository and import the module directly:
+
+```powershell
+git clone https://github.com/kreisi-dev/Join-Object.git JoinObject
 Import-Module ./JoinObject/JoinObject.psd1
 ```
 

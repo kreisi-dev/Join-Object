@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-20
+
+First stable release. The module's behavior is identical to 0.9.1.
+
+### Added
+- GitHub Actions CI: PSScriptAnalyzer plus the Pester suite on Linux, Windows,
+  macOS (PowerShell 7) and Windows PowerShell 5.1.
+- The module is now published to the
+  [PowerShell Gallery](https://www.powershellgallery.com/packages/JoinObject);
+  stable releases are pushed automatically by a release workflow.
+
 ## [0.9.1] - 2026-07-05
 
 ### Added
