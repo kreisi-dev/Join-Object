@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-20
+
+Packaging-only release; no functional changes.
+
+### Changed
+- The repository now uses the standard module layout: manifest, loader and the
+  `Public/` function folder live under `JoinObject/`, matching the sibling
+  modules SplitArray and InvokeWithEcho.
+- Releases are triggered by `v*` tags; the workflow verifies the tag against
+  the manifest version, runs the Pester suite before publishing and uses
+  `Publish-PSResource`.
+
 ## [1.0.1] - 2026-07-20
 
 Documentation-only release; no functional changes.
