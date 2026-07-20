@@ -1,6 +1,7 @@
 # JoinObject
 
 [![CI](https://github.com/kreisi-dev/Join-Object/actions/workflows/ci.yml/badge.svg)](https://github.com/kreisi-dev/Join-Object/actions/workflows/ci.yml)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/JoinObject.svg)](https://www.powershellgallery.com/packages/JoinObject)
 
 PowerShell's pipeline lets you write remarkably elegant one-liners. As long as you stay within a single cmdlet's output, life is good:
 
@@ -86,13 +87,14 @@ Check the [Releases page](https://github.com/kreisi-dev/Join-Object/releases) fo
 
 ## Installation
 
-From the [PowerShell Gallery](https://www.powershellgallery.com/packages/JoinObject):
+Install from the [PowerShell Gallery](https://www.powershellgallery.com/packages/JoinObject):
 
 ```powershell
 Install-Module -Name JoinObject
+Import-Module JoinObject
 ```
 
-Or clone the repository and import the module directly:
+For development, clone the repository and import the manifest directly:
 
 ```powershell
 git clone https://github.com/kreisi-dev/Join-Object.git JoinObject
