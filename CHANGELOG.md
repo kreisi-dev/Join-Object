@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-20
+
+Documentation-only release; no functional changes.
+
+### Changed
+- The README now describes installation from the PowerShell Gallery as the
+  primary path (git clone remains documented as the development workflow) and
+  carries the Gallery version badge.
+
 ## [1.0.0] - 2026-07-20
 
 First stable release. The module's behavior is identical to 0.9.1.

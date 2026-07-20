@@ -3,7 +3,7 @@
     RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.0.1'
 
     # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
@@ -38,7 +38,7 @@
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = 'https://github.com/kreisi-dev/Join-Object/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/kreisi-dev/Join-Object'
-            ReleaseNotes = 'First stable release. Functionally identical to 0.9.1; the module is now published to the PowerShell Gallery and every release is validated by CI (PSScriptAnalyzer + Pester on Linux, Windows, macOS and Windows PowerShell 5.1).'
+            ReleaseNotes = 'Documentation-only release: the README now describes installation from the PowerShell Gallery as the primary path and carries the Gallery version badge. No functional changes.'
         }
     }
 }
