@@ -1,0 +1,35 @@
+name: Publish to PowerShell Gallery
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    # Pre-releases follow the beta flow and are not pushed to the Gallery.
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Stage module layout
+        shell: pwsh
+        run: |
+          # Publish-Module requires the folder name to match the module name.
+          $staging = Join-Path $env:RUNNER_TEMP 'JoinObject'
+          New-Item -ItemType Directory -Path $staging | Out-Null
+          Copy-Item -Path JoinObject.psd1, JoinObject.psm1, LICENSE, README.md -Destination $staging
+          Copy-Item -Path src -Destination $staging -Recurse
+          $manifest = Test-ModuleManifest -Path (Join-Path $staging 'JoinObject.psd1')
+          Write-Host "Staged $($manifest.Name) $($manifest.Version)"
+
+      - name: Publish to PowerShell Gallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+              throw 'The PSGALLERY_API_KEY repository secret is not set.'
+          }
+          Publish-Module -Path (Join-Path $env:RUNNER_TEMP 'JoinObject') -NuGetApiKey $env:PSGALLERY_API_KEY
