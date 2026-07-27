@@ -25,9 +25,8 @@ jobs:
 
       - name: Run Pester tests
         run: |
-          Install-Module -Name PSDepend -Force -Scope CurrentUser
-          Invoke-PSDepend -Path ./requirements.psd1 -Force
-          Invoke-Pester tests/ -CI
+          Install-Module -Name InvokeBuild, PSDepend -Force -Scope CurrentUser
+          Invoke-Build Deps, Test
 
       - name: Publish to the PowerShell Gallery
         env:

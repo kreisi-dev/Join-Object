@@ -16,21 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install dependencies (PSDepend)
+      - name: Install build tools
         shell: pwsh
-        run: |
-          Install-Module -Name PSDepend -Force -Scope CurrentUser
-          Invoke-PSDepend -Path ./requirements.psd1 -Force
+        run: Install-Module -Name InvokeBuild, PSDepend -Force -Scope CurrentUser
 
       - name: Run PSScriptAnalyzer
         shell: pwsh
-        run: |
-          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error, Warning
-          if ($results) {
-              $results | Format-Table -AutoSize | Out-String | Write-Host
-              throw "PSScriptAnalyzer found $($results.Count) finding(s)."
-          }
-          Write-Host 'PSScriptAnalyzer: clean.'
+        run: Invoke-Build Deps, Lint
 
   test:
     name: Pester (${{ matrix.os }})
@@ -42,20 +34,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install dependencies (PSDepend)
+      - name: Install build tools
         shell: pwsh
-        run: |
-          Install-Module -Name PSDepend -Force -Scope CurrentUser
-          Invoke-PSDepend -Path ./requirements.psd1 -Force
+        run: Install-Module -Name InvokeBuild, PSDepend -Force -Scope CurrentUser
 
       - name: Run Pester tests
         shell: pwsh
-        run: |
-          $config = New-PesterConfiguration
-          $config.Run.Path = './tests'
-          $config.Run.Exit = $true
-          $config.Output.Verbosity = 'Detailed'
-          Invoke-Pester -Configuration $config
+        run: Invoke-Build Deps, Test
 
   test-windows-powershell:
     name: Pester (Windows PowerShell 5.1)
@@ -63,19 +48,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install dependencies (PSDepend)
+      - name: Install build tools
         shell: powershell
         run: |
           # Without TLS 1.2 the PowerShellGet calls cannot reach the PSGallery on PS 5.1.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name PSDepend -Force -Scope CurrentUser
-          Invoke-PSDepend -Path ./requirements.psd1 -Force
+          Install-Module -Name InvokeBuild, PSDepend -Force -Scope CurrentUser
 
       - name: Run Pester tests
         shell: powershell
-        run: |
-          $config = New-PesterConfiguration
-          $config.Run.Path = './tests'
-          $config.Run.Exit = $true
-          $config.Output.Verbosity = 'Detailed'
-          Invoke-Pester -Configuration $config
+        run: Invoke-Build Deps, Test

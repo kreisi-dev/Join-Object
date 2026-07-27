@@ -13,4 +13,6 @@
     }
 
     PSScriptAnalyzer = 'latest'
+
+    InvokeBuild      = 'latest'
 }
