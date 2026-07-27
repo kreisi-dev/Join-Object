@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-07-27
+
+Tooling-only release; no functional changes.
+
+### Changed
+- Development dependencies (Pester, PSScriptAnalyzer, InvokeBuild) are declared
+  in `requirements.psd1` and installed with PSDepend.
+- Development tasks (lint, test) are driven by Invoke-Build
+  (`JoinObject.build.ps1`); the CI and release workflows only bootstrap the
+  build tools and call `Invoke-Build`, so the same tasks run locally and in CI.
+
 ## [1.0.2] - 2026-07-20
 
 Packaging-only release; no functional changes.

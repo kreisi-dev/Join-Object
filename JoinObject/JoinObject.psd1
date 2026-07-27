@@ -3,7 +3,7 @@
     RootModule        = 'JoinObject.psm1'
 
     # Version of this module.
-    ModuleVersion     = '1.0.2'
+    ModuleVersion     = '1.0.3'
 
     # Unique ID for this module.
     GUID              = 'b2d6e3a4-5c1f-4e88-9a7d-1f0c2e6b9a31'
@@ -38,7 +38,7 @@
             Tags         = @('Join', 'Pipeline', 'Objects', 'Utility')
             LicenseUri   = 'https://github.com/kreisi-dev/Join-Object/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/kreisi-dev/Join-Object'
-            ReleaseNotes = 'Packaging-only release: the module now ships in the standard layout (JoinObject/ module folder with Public/) and is published by a tag-driven release workflow that runs the test suite first. No functional changes.'
+            ReleaseNotes = 'Tooling-only release: dev dependencies are declared in requirements.psd1 (PSDepend) and dev tasks (lint, test) are driven by Invoke-Build, locally and in CI. No functional changes.'
         }
     }
 }
