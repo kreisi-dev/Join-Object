@@ -159,9 +159,12 @@ Join-Object/
 
 ## Testing
 
-Tests are written with [Pester](https://pester.dev) (5.x):
+Tests are written with [Pester](https://pester.dev) (5.x). Development dependencies
+(Pester, PSScriptAnalyzer) are declared in [`requirements.psd1`](requirements.psd1)
+and can be installed with [PSDepend](https://github.com/RamblingCookieMonster/PSDepend):
 
 ```powershell
+Invoke-PSDepend -Path ./requirements.psd1 -Force
 Invoke-Pester -Path ./tests
 ```
 
