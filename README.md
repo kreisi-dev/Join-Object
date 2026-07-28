@@ -169,6 +169,10 @@ Install-Module InvokeBuild, PSDepend -Scope CurrentUser   # once
 Invoke-Build                                              # Deps + Lint + Test
 ```
 
+The test task enforces a code-coverage ratchet: the build fails if coverage
+drops below the target set in the build script (currently 90 %, baseline
+95 % as of 2026-07-28). Raise the target when coverage improves.
+
 ## Requirements
 
 - PowerShell 5.1 or later
